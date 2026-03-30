@@ -72,12 +72,6 @@ npm run dev
 
 ---
 
-## 📸 Screenshots
-
-*(Add screenshots here after UI is ready — this increases your chances of impressing recruiters)*
-
----
-
 ## 🚧 Future Improvements
 
 * AI-based resume suggestions
@@ -101,7 +95,7 @@ This project is open-source and available under the MIT License.
 
 ## 👨‍💻 Author
 
-**Ronak**
+**Rhythm**
 GitHub: https://github.com/rhythmadl56
 
 ---
