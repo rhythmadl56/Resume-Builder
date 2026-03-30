@@ -7,7 +7,6 @@ A modern and responsive Resume Builder web application built using **React** and
 ## 🔗 Live Demo
 
 👉 **[View Live Project](https://makemyresume-byrhythm.vercel.app/)**
-*(Replace this with your deployed link — Vercel/Netlify)*
 
 ---
 
