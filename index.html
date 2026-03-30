@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>MakeMyResume</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html,body,#root{height:100%;overflow:hidden}
+body{font-family:'DM Sans',sans-serif;background:#f0ece5}
+
+::-webkit-scrollbar{width:5px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:#d0c8bc;border-radius:4px}
+
+@keyframes fadeSlide{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.fade-in{animation:fadeSlide .25s ease forwards}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+.fi{width:100%;padding:8px 11px;border:1.5px solid #e0d9d0;border-radius:7px;font-family:'DM Sans',sans-serif;font-size:13.5px;background:#fffefb;color:#2a2623;outline:none;transition:border-color .2s,box-shadow .2s}
+.fi:focus{border-color:#a89880;box-shadow:0 0 0 3px rgba(168,152,128,.14)}
+.fi::placeholder{color:#c0b8ae}
+textarea.fi{resize:none;min-height:64px}
+
+.btn-primary{display:flex;align-items:center;gap:7px;padding:9px 18px;background:#2a2623;color:#f5f1eb;border:none;border-radius:9px;font-family:'DM Sans',sans-serif;font-size:13.5px;font-weight:500;cursor:pointer;transition:all .2s}
+.btn-primary:hover{background:#1a1410;box-shadow:0 4px 14px rgba(42,38,35,.28)}
+.btn-primary:disabled{background:#d0c8bc;color:#a8a09a;cursor:not-allowed;box-shadow:none}
+.btn-ghost{padding:8px 14px;background:transparent;color:#8a7a6a;border:1.5px solid #e0d9d0;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;transition:all .2s}
+.btn-ghost:hover{border-color:#a89880;color:#5a4a3a}
+.btn-ghost:disabled{color:#c0b8ae;border-color:#ede8e0;cursor:not-allowed}
+.btn-add{display:flex;align-items:center;gap:5px;padding:6px 12px;background:#f0ece5;color:#6a5a4a;border:1.5px dashed #d0c8bc;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:12.5px;font-weight:500;cursor:pointer;transition:all .15s}
+.btn-add:hover{background:#e8e0d5;border-color:#a89880}
+.btn-del{padding:3px 9px;background:#fef0ee;color:#b85c50;border:1px solid #f0c8c4;border-radius:6px;font-family:'DM Sans',sans-serif;font-size:11.5px;cursor:pointer;transition:all .15s}
+.btn-del:hover{background:#fde0dc}
+
+.step-tab{padding:5px 13px;border-radius:16px;font-size:12.5px;font-weight:500;cursor:pointer;border:none;transition:all .18s;font-family:'DM Sans',sans-serif;white-space:nowrap}
+.step-tab.active{background:#2a2623;color:#fff}
+.step-tab.done{background:#e8e0d5;color:#6a5a4a}
+.step-tab.todo{background:transparent;color:#b0a090;border:1.5px solid #e0d9d0}
+
+.tpl-btn{padding:6px 14px;border-radius:7px;font-size:12.5px;font-weight:500;cursor:pointer;transition:all .18s;font-family:'DM Sans',sans-serif}
+.tpl-btn.on{background:#2a2623;color:#fff;border:1.5px solid #2a2623}
+.tpl-btn.off{background:transparent;color:#8a7a6a;border:1.5px solid #d8d0c8}
+.tpl-btn.off:hover{border-color:#a89880;color:#5a4a3a}
+
+.e-card{background:#faf7f3;border:1.5px solid #e8e0d5;border-radius:10px;padding:12px;margin-bottom:8px}
+
+/* ── TEMPLATE SIMPLE ── */
+.rs{font-family:'DM Sans',sans-serif;color:#1c1c1c;background:#fff;padding:40px 44px;width:100%}
+.rs-name{font-family:'DM Serif Display',serif;font-size:30px;color:#1c1c1c;line-height:1.15;margin-bottom:3px}
+.rs-contacts{display:flex;flex-wrap:wrap;gap:4px 18px;font-size:11.5px;color:#666;margin-bottom:0;border-bottom:1px solid #ebebeb;padding-bottom:14px}
+.rs-section-label{font-size:10px;letter-spacing:2.2px;text-transform:uppercase;color:#999;margin-bottom:6px;margin-top:18px;font-weight:600}
+.rs-rule{height:1px;background:#ebebeb;margin-bottom:10px}
+.rs-summary{font-size:12.5px;color:#555;line-height:1.75;margin:0}
+.rs-entry{margin-bottom:12px}
+.rs-entry-head{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.rs-entry-title{font-size:13.5px;font-weight:600;color:#1c1c1c}
+.rs-entry-date{font-size:11px;color:#999;white-space:nowrap;flex-shrink:0}
+.rs-entry-sub{font-size:12px;color:#888;margin-top:1px;margin-bottom:3px}
+.rs-entry-desc{font-size:12px;color:#555;line-height:1.7}
+.rs-skills{display:flex;flex-wrap:wrap;gap:5px;margin-top:2px}
+.rs-skill{background:#f3ede6;padding:3px 10px;border-radius:11px;font-size:11.5px;color:#5a4a3a}
+
+/* ── TEMPLATE MODERN ── */
+.rm{font-family:'DM Sans',sans-serif;display:flex;width:100%;min-height:100%}
+.rm-side{width:37%;background:#2a2623;padding:32px 22px;flex-shrink:0}
+.rm-main{width:63%;background:#fff;padding:32px 26px;min-height:100%}
+.rm-name{font-family:'DM Serif Display',serif;font-size:23px;color:#fff;line-height:1.2;margin-bottom:2px}
+.rm-title-tag{font-size:11px;color:#b0a090;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:22px}
+.rm-side-label{font-size:9.5px;letter-spacing:2.2px;text-transform:uppercase;color:#a09080;border-bottom:1px solid #3e3330;padding-bottom:4px;margin-bottom:10px;margin-top:18px;font-weight:600}
+.rm-contact-item{font-size:11.5px;color:#c0b0a0;margin-bottom:6px;display:flex;align-items:flex-start;gap:6px;line-height:1.4}
+.rm-skill-row{margin-bottom:8px}
+.rm-skill-name{font-size:11.5px;color:#e0d8d0;margin-bottom:3px}
+.rm-skill-track{background:#3e3330;border-radius:3px;height:4px}
+.rm-skill-fill{background:#a09080;border-radius:3px;height:4px}
+.rm-main-label{font-size:9.5px;letter-spacing:2.2px;text-transform:uppercase;color:#a09080;border-bottom:1.5px solid #f0ece6;padding-bottom:4px;margin-bottom:12px;margin-top:22px;font-weight:600}
+.rm-entry{margin-bottom:14px;display:flex;gap:10px}
+.rm-dot{width:7px;height:7px;background:#c0b0a0;border-radius:50%;flex-shrink:0;margin-top:5px}
+.rm-entry-title{font-size:13.5px;font-weight:600;color:#2a2623}
+.rm-entry-sub{font-size:11.5px;color:#9a8a7a;margin-top:1px;margin-bottom:3px}
+.rm-entry-desc{font-size:12px;color:#555;line-height:1.7}
+.rm-summary{font-size:12.5px;color:#555;line-height:1.75;margin:0}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState } = React;
+
+/* ─── PDF ─── */
+const downloadPDF = (name) => {
+  const el = document.getElementById('resume-preview');
+  return html2pdf().set({
+    margin: 0,
+    filename: `${name || 'resume'}.pdf`,
+    image: { type: 'jpeg', quality: .98 },
+    html2canvas: { scale: 2, useCORS: true, logging: false, backgroundColor: '#ffffff' },
+    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+  }).from(el).save();
+};
+
+/* ─── Seed data ─── */
+const INIT = {
+  name: 'Aryan Mehra',
+  email: 'aryan@email.com',
+  phone: '+91 98765 43210',
+  location: 'New Delhi, India',
+  summary: 'Frontend developer with 3 years of experience building performant, accessible web apps. Passionate about clean code and great UX.',
+  sections: [
+    {
+      id: 's-exp', type: 'list', title: 'Experience', removable: true,
+      entries: [{ id: 'e1', line1: 'Frontend Developer', line2: 'TechCorp India', line3: 'Jul 2022 – Present', body: 'Built React dashboards used by 50k+ users. Improved load time by 40% via code-splitting and lazy loading.' }]
+    },
+    {
+      id: 's-edu', type: 'list', title: 'Education', removable: true,
+      entries: [{ id: 'e2', line1: 'B.Tech in Computer Science', line2: 'Delhi Technological University', line3: '2018 – 2022', body: 'GPA 8.6 / 10' }]
+    },
+    { id: 's-skills', type: 'skills', title: 'Skills', removable: true, value: 'React, TypeScript, Tailwind CSS, Node.js, Git, Figma' },
+  ]
+};
+
+/* ─── Label ─── */
+const Lbl = ({ t, children }) => (
+  <div>
+    <div style={{ fontSize: 11.5, fontWeight: 600, color: '#9a8a7a', marginBottom: 4, letterSpacing: .3 }}>{t}</div>
+    {children}
+  </div>
+);
+
+/* ════════════════════════════════
+   TEMPLATE SIMPLE
+════════════════════════════════ */
+const TemplateSimple = ({ data }) => {
+  const { name, email, phone, location, summary, sections } = data;
+  return (
+    <div className="rs">
+      <div className="rs-name">{name || 'Your Name'}</div>
+      {(email || phone || location) && (
+        <div className="rs-contacts" style={{ marginTop: 6 }}>
+          {email && <span>✉ {email}</span>}
+          {phone && <span>☎ {phone}</span>}
+          {location && <span>⊙ {location}</span>}
+        </div>
+      )}
+
+      {summary && (
+        <>
+          <div className="rs-section-label">Profile</div>
+          <div className="rs-rule" />
+          <p className="rs-summary">{summary}</p>
+        </>
+      )}
+
+      {sections.map(sec => {
+        if (sec.type === 'list') {
+          const valid = sec.entries.filter(e => e.line1 || e.line2 || e.body);
+          if (!valid.length) return null;
+          return (
+            <div key={sec.id}>
+              <div className="rs-section-label">{sec.title}</div>
+              <div className="rs-rule" />
+              {valid.map(e => (
+                <div key={e.id} className="rs-entry">
+                  <div className="rs-entry-head">
+                    <span className="rs-entry-title">{e.line1}</span>
+                    {e.line3 && <span className="rs-entry-date">{e.line3}</span>}
+                  </div>
+                  {e.line2 && <div className="rs-entry-sub">{e.line2}</div>}
+                  {e.body && <div className="rs-entry-desc">{e.body}</div>}
+                </div>
+              ))}
+            </div>
+          );
+        }
+        if (sec.type === 'skills') {
+          const chips = (sec.value || '').split(',').map(s => s.trim()).filter(Boolean);
+          if (!chips.length) return null;
+          return (
+            <div key={sec.id}>
+              <div className="rs-section-label">{sec.title}</div>
+              <div className="rs-rule" />
+              <div className="rs-skills">{chips.map((s, i) => <span key={i} className="rs-skill">{s}</span>)}</div>
+            </div>
+          );
+        }
+        if (sec.type === 'text') {
+          if (!sec.value) return null;
+          return (
+            <div key={sec.id}>
+              <div className="rs-section-label">{sec.title}</div>
+              <div className="rs-rule" />
+              <p className="rs-summary">{sec.value}</p>
+            </div>
+          );
+        }
+        if (sec.type === 'items') {
+          const valid = sec.entries.filter(e => e.line1 || e.body);
+          if (!valid.length) return null;
+          return (
+            <div key={sec.id}>
+              <div className="rs-section-label">{sec.title}</div>
+              <div className="rs-rule" />
+              {valid.map(e => (
+                <div key={e.id} style={{ marginBottom: 10 }}>
+                  {e.line1 && <div className="rs-entry-title" style={{ fontSize: 13 }}>{e.line1}</div>}
+                  {e.body && <div className="rs-entry-desc">{e.body}</div>}
+                </div>
+              ))}
+            </div>
+          );
+        }
+        return null;
+      })}
+    </div>
+  );
+};
+
+/* ════════════════════════════════
+   TEMPLATE MODERN
+════════════════════════════════ */
+const TemplateModern = ({ data }) => {
+  const { name, email, phone, location, summary, sections } = data;
+  const skillsSec = sections.find(s => s.type === 'skills');
+  const skills = skillsSec ? (skillsSec.value || '').split(',').map(s => s.trim()).filter(Boolean) : [];
+  const mainSections = sections.filter(s => s.type !== 'skills');
+
+  return (
+    <div className="rm">
+      <div className="rm-side">
+        <div className="rm-name">{name || 'Your Name'}</div>
+        <div className="rm-title-tag">Résumé</div>
+
+        {(email || phone || location) && (
+          <>
+            <div className="rm-side-label">Contact</div>
+            {email && <div className="rm-contact-item"><span>✉</span><span>{email}</span></div>}
+            {phone && <div className="rm-contact-item"><span>☎</span><span>{phone}</span></div>}
+            {location && <div className="rm-contact-item"><span>⊙</span><span>{location}</span></div>}
+          </>
+        )}
+
+        {skills.length > 0 && (
+          <>
+            <div className="rm-side-label">{skillsSec.title}</div>
+            {skills.map((s, i) => (
+              <div key={i} className="rm-skill-row">
+                <div className="rm-skill-name">{s}</div>
+                <div className="rm-skill-track"><div className="rm-skill-fill" style={{ width: `${60 + (i * 13) % 35}%` }} /></div>
+              </div>
+            ))}
+          </>
+        )}
+      </div>
+
+      <div className="rm-main">
+        {summary && (
+          <>
+            <div className="rm-main-label" style={{ marginTop: 0 }}>About</div>
+            <p className="rm-summary">{summary}</p>
+          </>
+        )}
+
+        {mainSections.map(sec => {
+          if (sec.type === 'list') {
+            const valid = sec.entries.filter(e => e.line1 || e.line2 || e.body);
+            if (!valid.length) return null;
+            return (
+              <div key={sec.id}>
+                <div className="rm-main-label">{sec.title}</div>
+                {valid.map(e => (
+                  <div key={e.id} className="rm-entry">
+                    <div className="rm-dot" />
+                    <div>
+                      <div className="rm-entry-title">{e.line1}</div>
+                      <div className="rm-entry-sub">{[e.line2, e.line3].filter(Boolean).join(' · ')}</div>
+                      {e.body && <div className="rm-entry-desc">{e.body}</div>}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            );
+          }
+          if (sec.type === 'text') {
+            if (!sec.value) return null;
+            return (
+              <div key={sec.id}>
+                <div className="rm-main-label">{sec.title}</div>
+                <p className="rm-summary">{sec.value}</p>
+              </div>
+            );
+          }
+          if (sec.type === 'items') {
+            const valid = sec.entries.filter(e => e.line1 || e.body);
+            if (!valid.length) return null;
+            return (
+              <div key={sec.id}>
+                <div className="rm-main-label">{sec.title}</div>
+                {valid.map(e => (
+                  <div key={e.id} className="rm-entry">
+                    <div className="rm-dot" />
+                    <div>
+                      {e.line1 && <div className="rm-entry-title">{e.line1}</div>}
+                      {e.body && <div className="rm-entry-desc">{e.body}</div>}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            );
+          }
+          return null;
+        })}
+      </div>
+    </div>
+  );
+};
+
+/* ════════════════════════════════
+   SECTION EDITOR (one section)
+════════════════════════════════ */
+const SectionEditor = ({ sec, onChange, onRemove }) => {
+  const updEntry = (eid, field, val) =>
+    onChange({ ...sec, entries: sec.entries.map(e => e.id === eid ? { ...e, [field]: val } : e) });
+  const addEntry = () =>
+    onChange({ ...sec, entries: [...sec.entries, { id: 'e' + Date.now(), line1: '', line2: '', line3: '', body: '' }] });
+  const delEntry = (eid) =>
+    onChange({ ...sec, entries: sec.entries.filter(e => e.id !== eid) });
+
+  const hdr = (
+    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+      <span style={{ fontSize: 12.5, fontWeight: 700, color: '#5a4a3a' }}>{sec.title}</span>
+      {sec.removable && <button className="btn-del" onClick={() => onRemove(sec.id)}>✕ Remove</button>}
+    </div>
+  );
+
+  if (sec.type === 'skills' || sec.type === 'text') {
+    return (
+      <div className="e-card">
+        {hdr}
+        <textarea className="fi" style={{ minHeight: 52 }}
+          placeholder={sec.type === 'skills' ? 'React, Node.js, Figma…' : 'Write here…'}
+          value={sec.value || ''} onChange={e => onChange({ ...sec, value: e.target.value })} />
+        {sec.type === 'skills' && (
+          <div style={{ marginTop: 7, display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+            {(sec.value || '').split(',').map(s => s.trim()).filter(Boolean).map((s, i) => (
+              <span key={i} style={{ background: '#fff', border: '1px solid #e0d9d0', borderRadius: 10, padding: '2px 9px', fontSize: 11.5, color: '#5a4a3a' }}>{s}</span>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  const isItems = sec.type === 'items';
+  return (
+    <div className="e-card">
+      {hdr}
+      {sec.entries.map((e, idx) => (
+        <div key={e.id} style={{ background: '#fff', border: '1px solid #e8e0d5', borderRadius: 8, padding: '10px', marginBottom: 7 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 7 }}>
+            <span style={{ fontSize: 11.5, color: '#9a8a7a', fontWeight: 600 }}>Entry {idx + 1}</span>
+            {sec.entries.length > 1 && <button className="btn-del" onClick={() => delEntry(e.id)}>✕</button>}
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
+            <Lbl t={isItems ? 'Title' : 'Role / Degree'}>
+              <input className="fi" placeholder={isItems ? 'Project / Award name' : 'Frontend Developer'} value={e.line1} onChange={v => updEntry(e.id, 'line1', v.target.value)} />
+            </Lbl>
+            {!isItems && (
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 7 }}>
+                <Lbl t="Company / School"><input className="fi" placeholder="TechCorp / DTU" value={e.line2} onChange={v => updEntry(e.id, 'line2', v.target.value)} /></Lbl>
+                <Lbl t="Period / Year"><input className="fi" placeholder="2022 – Present" value={e.line3} onChange={v => updEntry(e.id, 'line3', v.target.value)} /></Lbl>
+              </div>
+            )}
+            <Lbl t="Description / Details">
+              <textarea className="fi" style={{ minHeight: 52 }} placeholder="Describe…" value={e.body} onChange={v => updEntry(e.id, 'body', v.target.value)} />
+            </Lbl>
+          </div>
+        </div>
+      ))}
+      <button className="btn-add" onClick={addEntry}>+ Add entry</button>
+    </div>
+  );
+};
+
+/* ════════════════════════════════
+   FORM
+════════════════════════════════ */
+const STEPS = ['Personal', 'Sections', '+ Section'];
+
+const Form = ({ data, setData }) => {
+  const [step, setStep] = useState(0);
+  const [newTitle, setNewTitle] = useState('');
+  const [newType, setNewType] = useState('list');
+
+  const up = (f, v) => setData(p => ({ ...p, [f]: v }));
+  const upSec = (updated) => setData(p => ({ ...p, sections: p.sections.map(s => s.id === updated.id ? updated : s) }));
+  const removeSec = (id) => setData(p => ({ ...p, sections: p.sections.filter(s => s.id !== id) }));
+  const addSection = () => {
+    if (!newTitle.trim()) return;
+    const base = { id: 's' + Date.now(), title: newTitle.trim(), type: newType, removable: true };
+    const newSec = (newType === 'skills' || newType === 'text')
+      ? { ...base, value: '' }
+      : { ...base, entries: [{ id: 'e' + Date.now(), line1: '', line2: '', line3: '', body: '' }] };
+    setData(p => ({ ...p, sections: [...p.sections, newSec] }));
+    setNewTitle('');
+    setStep(1);
+  };
+
+  const SEC_TYPES = [
+    { v: 'list', label: '📋 Work / Edu', desc: 'Role + Company + Date + Details' },
+    { v: 'items', label: '📌 Items', desc: 'Title + Details only' },
+    { v: 'skills', label: '🏷 Tags', desc: 'Comma-separated chips' },
+    { v: 'text', label: '📝 Paragraph', desc: 'Plain text block' },
+  ];
+
+  const IDEAS = ['Projects', 'Certifications', 'Languages', 'Volunteer', 'Publications', 'Awards', 'Hobbies', 'References'];
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
+
+      {/* Step tabs */}
+      <div style={{ display: 'flex', gap: 6, marginBottom: 14, flexShrink: 0, flexWrap: 'wrap' }}>
+        {STEPS.map((s, i) => (
+          <button key={i} className={`step-tab ${i === step ? 'active' : i < step ? 'done' : 'todo'}`} onClick={() => setStep(i)}>
+            {i < step ? '✓ ' : ''}{s}
+          </button>
+        ))}
+      </div>
+
+      {/* Scrollable content */}
+      <div className="fade-in" key={step} style={{ flex: 1, overflowY: 'auto', paddingRight: 3 }}>
+
+        {/* ── Step 0: Personal ── */}
+        {step === 0 && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            <Lbl t="Full Name">
+              <input className="fi" placeholder="Aryan Mehra" value={data.name} onChange={e => up('name', e.target.value)} />
+            </Lbl>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+              <Lbl t="Email"><input className="fi" placeholder="you@email.com" value={data.email} onChange={e => up('email', e.target.value)} /></Lbl>
+              <Lbl t="Phone"><input className="fi" placeholder="+91 98765 43210" value={data.phone} onChange={e => up('phone', e.target.value)} /></Lbl>
+            </div>
+            <Lbl t="Location"><input className="fi" placeholder="New Delhi, India" value={data.location} onChange={e => up('location', e.target.value)} /></Lbl>
+            <Lbl t="Summary / Bio">
+              <textarea className="fi" style={{ minHeight: 80 }} placeholder="A short professional summary…" value={data.summary} onChange={e => up('summary', e.target.value)} />
+            </Lbl>
+          </div>
+        )}
+
+        {/* ── Step 1: Sections ── */}
+        {step === 1 && (
+          <div>
+            {data.sections.length === 0 && (
+              <div style={{ textAlign: 'center', padding: '32px 0', color: '#b0a090', fontSize: 13 }}>
+                <div style={{ fontSize: 28, marginBottom: 8 }}>📄</div>
+                No sections yet.<br />Go to "+ Section" tab to add one.
+              </div>
+            )}
+            {data.sections.map(sec => (
+              <SectionEditor key={sec.id} sec={sec} onChange={upSec} onRemove={removeSec} />
+            ))}
+          </div>
+        )}
+
+        {/* ── Step 2: Add Section ── */}
+        {step === 2 && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 11 }}>
+            <div style={{ background: '#faf7f3', border: '1.5px solid #e8e0d5', borderRadius: 10, padding: 14 }}>
+              <div style={{ fontSize: 13, fontWeight: 700, color: '#5a4a3a', marginBottom: 12 }}>New Section</div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                <Lbl t="Section Name">
+                  <input className="fi" placeholder="e.g. Projects, Awards, Languages…"
+                    value={newTitle} onChange={e => setNewTitle(e.target.value)}
+                    onKeyDown={e => e.key === 'Enter' && addSection()} />
+                </Lbl>
+                <Lbl t="Layout Type">
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6, marginTop: 2 }}>
+                    {SEC_TYPES.map(opt => (
+                      <div key={opt.v} onClick={() => setNewType(opt.v)}
+                        style={{ padding: '9px 11px', borderRadius: 8, cursor: 'pointer', transition: 'all .15s',
+                          border: newType === opt.v ? '1.5px solid #a89880' : '1.5px solid #e0d9d0',
+                          background: newType === opt.v ? '#f5efe7' : '#fffefb' }}>
+                        <div style={{ fontSize: 12.5, fontWeight: 600, color: newType === opt.v ? '#5a4a3a' : '#8a7a6a' }}>{opt.label}</div>
+                        <div style={{ fontSize: 11, color: '#b0a090', marginTop: 2 }}>{opt.desc}</div>
+                      </div>
+                    ))}
+                  </div>
+                </Lbl>
+              </div>
+              <button className="btn-primary" style={{ marginTop: 12, width: '100%', justifyContent: 'center' }}
+                onClick={addSection} disabled={!newTitle.trim()}>
+                + Add "{newTitle || 'Section'}"
+              </button>
+            </div>
+
+            <div style={{ padding: '10px 12px', background: '#f0ece5', borderRadius: 9 }}>
+              <div style={{ fontSize: 11, fontWeight: 600, color: '#9a8a7a', letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 7 }}>Quick picks</div>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5 }}>
+                {IDEAS.map(s => (
+                  <button key={s} onClick={() => setNewTitle(s)}
+                    style={{ padding: '4px 10px', background: '#fff', border: '1px solid #e0d9d0', borderRadius: 10, fontSize: 12, color: '#6a5a4a', cursor: 'pointer', fontFamily: 'DM Sans,sans-serif', transition: 'all .15s' }}>
+                    {s}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Nav — always visible, never below fold */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: 12, marginTop: 10, borderTop: '1.5px solid #e8e0d5', flexShrink: 0 }}>
+        <button className="btn-ghost" onClick={() => setStep(s => Math.max(0, s - 1))} disabled={step === 0}>← Back</button>
+        <span style={{ fontSize: 11.5, color: '#c0b0a0' }}>{step + 1} / {STEPS.length}</span>
+        <button className="btn-primary" onClick={() => setStep(s => Math.min(STEPS.length - 1, s + 1))} disabled={step === STEPS.length - 1}>Next →</button>
+      </div>
+    </div>
+  );
+};
+
+/* ════════════════════════════════
+   APP
+════════════════════════════════ */
+const App = () => {
+  const [data, setData] = useState(INIT);
+  const [tpl, setTpl] = useState('simple');
+  const [dl, setDl] = useState(false);
+
+  const handleDL = async () => {
+    setDl(true);
+    try { await downloadPDF(data.name); }
+    finally { setTimeout(() => setDl(false), 1800); }
+  };
+
+  return (
+    <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+
+      {/* ── Header ── */}
+      <header style={{ background: '#fff', borderBottom: '1.5px solid #e0d9d0', padding: '0 24px', height: 54, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0, zIndex: 20 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
+          <div style={{ width: 30, height: 30, background: '#2a2623', borderRadius: 7, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15 }}>📄</div>
+          <span style={{ fontFamily: 'DM Serif Display,serif', fontSize: 18, color: '#2a2623' }}>MakeMyResume</span>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <div style={{ display: 'flex', gap: 4, background: '#f0ece5', padding: 4, borderRadius: 8 }}>
+            <button className={`tpl-btn ${tpl === 'simple' ? 'on' : 'off'}`} onClick={() => setTpl('simple')}>Simple</button>
+            <button className={`tpl-btn ${tpl === 'modern' ? 'on' : 'off'}`} onClick={() => setTpl('modern')}>Modern</button>
+          </div>
+          <button className="btn-primary" onClick={handleDL} disabled={dl}>
+            {dl
+              ? <><span style={{ display: 'inline-block', width: 13, height: 13, border: '2px solid #ffffff44', borderTop: '2px solid #fff', borderRadius: '50%', animation: 'spin 1s linear infinite' }} /> Generating…</>
+              : <><span>⬇</span> Download PDF</>}
+          </button>
+        </div>
+      </header>
+
+      {/* ── Body: fixed height, no overflow ── */}
+      <div style={{ flex: 1, display: 'grid', gridTemplateColumns: '400px 1fr', overflow: 'hidden' }}>
+
+        {/* Left panel — form fills 100%, nav is pinned inside */}
+        <div style={{ background: '#fff', borderRight: '1.5px solid #e0d9d0', display: 'flex', flexDirection: 'column', overflow: 'hidden', padding: '18px 20px' }}>
+          <div style={{ marginBottom: 14, flexShrink: 0 }}>
+            <div style={{ fontSize: 15, fontWeight: 700, color: '#2a2623' }}>Build your resume</div>
+            <div style={{ fontSize: 11.5, color: '#b0a090', marginTop: 2 }}>Preview updates instantly</div>
+          </div>
+          <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+            <Form data={data} setData={setData} />
+          </div>
+        </div>
+
+        {/* Right panel — preview scrolls */}
+        <div style={{ overflowY: 'auto', padding: '24px 32px', background: '#f0ece5' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+            <div>
+              <div style={{ fontSize: 13.5, fontWeight: 700, color: '#2a2623' }}>Live Preview</div>
+              <div style={{ fontSize: 11.5, color: '#b0a090', marginTop: 1 }}>
+                Template: <strong style={{ color: '#6a5a4a' }}>{tpl === 'simple' ? 'Simple' : 'Modern'}</strong>
+              </div>
+            </div>
+            <div style={{ fontSize: 11, color: '#b0a090', background: '#fff', padding: '4px 11px', borderRadius: 14, border: '1px solid #e0d9d0' }}>A4 · PDF Ready</div>
+          </div>
+
+          <div style={{ maxWidth: 680, margin: '0 auto', background: '#fff', boxShadow: '0 8px 40px rgba(0,0,0,.10)', borderRadius: 2, overflow: 'hidden' }}>
+            <div id="resume-preview">
+              {tpl === 'simple' ? <TemplateSimple data={data} /> : <TemplateModern data={data} />}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+ReactDOM.render(<App />, document.getElementById('root'));
+</script>
+</body>
+</html>
